@@ -35,6 +35,11 @@ Rules:
 - Return ONLY the raw SQL query, nothing else
 - No markdown, no backticks, no explanation
 - Only use tables that exist in the schema above
+- NEVER select product_id, customer_id, or order_id in results
+  unless the user explicitly asks for IDs
+- Always use human readable columns like category names, state names, dates
+- When asked about top products always group by product_category_name_english
+  not by product_id
 """
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content.strip()
@@ -57,7 +62,9 @@ Please provide a structured business insight based on this data."""
 
 # Why this? This is the main function that runs the full pipeline end to end
 def run_agent(question: str) -> dict:
-    # Step 1: Build schema description for the LLM to understand our DB
+
+    # Why this? Schema description tells the LLM exactly what
+    # tables and columns exist so it writes correct SQL
     table_info = """
 Tables available:
 - orders (order_id, customer_id, order_status, order_purchase_timestamp)
@@ -72,18 +79,27 @@ Key rules:
 - Only count orders where order_status = 'delivered'
 - For categories always join products to category_translation
 - Dates are TEXT, use strftime('%Y-%m', order_purchase_timestamp) for month grouping
+- IMPORTANT: This dataset contains data from 2016 to 2018 ONLY
+- When the user asks about 'last month', 'recent', or 'latest', use 2018-08
+- When the user asks about 'this year', interpret it as 2018
+- Never query dates beyond 2018 as there is no data
+- NEVER select product_id, customer_id, or order_id in results
+  unless the user explicitly asks for IDs
+- Always use human readable columns like category names, state names, dates
+- When asked about 'top products' always group by product_category_name_english
+  not by product_id
 """
 
-    # Step 2: Generate SQL from the question
+    # Step 1: Generate SQL from the question
     sql_query = generate_sql(question, table_info)
 
-    # Step 3: Run the SQL query
+    # Step 2: Run the SQL query
     df = run_sql_query(sql_query)
 
-    # Step 4: Analyse the dataframe into a text summary
+    # Step 3: Analyse the dataframe into a text summary
     data_summary = analyze_dataframe(df)
 
-    # Step 5: Generate business insight
+    # Step 4: Generate business insight
     insight = generate_insight(question, data_summary)
 
     return {
