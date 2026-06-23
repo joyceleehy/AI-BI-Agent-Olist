@@ -1,0 +1,20 @@
+# Why these? Secret keys must never be pushed to GitHub
+.env
+
+# Why these? Virtual environment folder is huge and unnecessary
+venv/
+
+# Why these? Python cache files are auto-generated, not needed
+__pycache__/
+*.pyc
+*.pyo
+
+# Why these? VS Code personal settings
+.vscode/
+
+# Why these? Windows system files
+Thumbs.db
+desktop.ini
+
+# Why? Database file is too large for GitHub
+database/olist.db
