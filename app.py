@@ -4,8 +4,6 @@ import plotly.express as px
 import logging
 from agent import run_agent
 
-# Why this? Logs errors and info to terminal for debugging
-# without crashing the user's UI
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -28,18 +26,11 @@ if "history" not in st.session_state:
 
 # ─────────────────────────────────────────
 # HELPER: DETECT BEST CHART TYPE
-# Why this? Different data shapes suit different
-# chart types — auto-selecting makes the app smarter
 # ─────────────────────────────────────────
 def detect_best_chart(df: pd.DataFrame) -> str:
-    """
-    Analyses the DataFrame structure and returns
-    the best chart type as a string.
-    """
     if df is None or df.empty:
         return "none"
 
-    # Identify column types
     numeric_cols = []
     date_cols = []
     text_cols = []
@@ -52,7 +43,6 @@ def detect_best_chart(df: pd.DataFrame) -> str:
         except (ValueError, TypeError):
             pass
 
-        # Why this? Check if the column looks like a date
         if any(keyword in col.lower() for keyword in ["date", "month", "year", "timestamp", "time"]):
             date_cols.append(col)
         else:
@@ -65,24 +55,20 @@ def detect_best_chart(df: pd.DataFrame) -> str:
 
     if not numeric_cols:
         return "table"
-
     if len(df) == 1:
         return "table"
-
-    # Why this order? Date → Line, Small categories → Pie, Others → Bar
     if date_cols:
         return "line"
     if text_cols and len(df) <= 6:
         return "pie"
     if text_cols:
         return "bar"
-
     return "table"
 
 # ─────────────────────────────────────────
 # HELPER: DISPLAY KPI CARDS
-# Why this? KPI cards give stakeholders an instant
-# at-a-glance summary before reading the full analysis
+# Why this? Gives stakeholders instant at-a-glance
+# metrics before reading the full analysis
 # ─────────────────────────────────────────
 def display_kpis(df: pd.DataFrame):
     if df is None or df.empty:
@@ -91,8 +77,6 @@ def display_kpis(df: pd.DataFrame):
     rows = len(df)
     cols = len(df.columns)
 
-    # Why this? Try to find revenue and average values
-    # from numeric columns automatically
     numeric_cols = []
     for col in df.columns:
         try:
@@ -112,20 +96,13 @@ def display_kpis(df: pd.DataFrame):
         total_value = df[value_col].sum()
         avg_value = df[value_col].mean()
 
-    # Why this? Build KPI columns dynamically based on available data
     kpi_cols = st.columns(4 if total_value is not None else 2)
 
     with kpi_cols[0]:
-        st.metric(
-            label="📋 Rows Returned",
-            value=f"{rows:,}"
-        )
+        st.metric(label="📋 Rows Returned", value=f"{rows:,}")
 
     with kpi_cols[1]:
-        st.metric(
-            label="📊 Columns",
-            value=f"{cols:,}"
-        )
+        st.metric(label="📊 Columns", value=f"{cols:,}")
 
     if total_value is not None and len(kpi_cols) > 2:
         with kpi_cols[2]:
@@ -143,9 +120,8 @@ def display_kpis(df: pd.DataFrame):
 
 # ─────────────────────────────────────────
 # HELPER: DISPLAY CHART
-# Why this? Plotly gives interactive tooltips,
-# better labels, and looks more professional
-# than Streamlit's default bar_chart
+# Why this? Plotly gives interactive tooltips
+# and looks more professional than default charts
 # ─────────────────────────────────────────
 def display_chart(df: pd.DataFrame):
     if df is None or df.empty:
@@ -155,7 +131,6 @@ def display_chart(df: pd.DataFrame):
     chart_type = detect_best_chart(df)
     logger.info(f"Chart type selected: {chart_type}")
 
-    # Identify columns
     numeric_cols = []
     label_col = None
 
@@ -189,8 +164,10 @@ def display_chart(df: pd.DataFrame):
                 x=label_col,
                 y=value_col,
                 title=f"{value_col} by {label_col}",
-                labels={label_col: label_col.replace("_", " ").title(),
-                        value_col: value_col.replace("_", " ").title()},
+                labels={
+                    label_col: label_col.replace("_", " ").title(),
+                    value_col: value_col.replace("_", " ").title()
+                },
                 color=value_col,
                 color_continuous_scale="Blues",
                 text_auto=".2s"
@@ -210,8 +187,10 @@ def display_chart(df: pd.DataFrame):
                 x=label_col,
                 y=value_col,
                 title=f"{value_col} over {label_col}",
-                labels={label_col: label_col.replace("_", " ").title(),
-                        value_col: value_col.replace("_", " ").title()},
+                labels={
+                    label_col: label_col.replace("_", " ").title(),
+                    value_col: value_col.replace("_", " ").title()
+                },
                 markers=True
             )
             fig.update_layout(plot_bgcolor="rgba(0,0,0,0)")
@@ -229,7 +208,6 @@ def display_chart(df: pd.DataFrame):
             st.plotly_chart(fig, use_container_width=True)
 
         else:
-            # Why this? Fallback — show the raw dataframe as a table
             st.dataframe(df, use_container_width=True)
 
     except Exception as e:
@@ -239,29 +217,29 @@ def display_chart(df: pd.DataFrame):
 
 # ─────────────────────────────────────────
 # HELPER: DISPLAY INSIGHTS
-# Why this? Each section of the insight gets its own
-# styled container so stakeholders can read at a glance
+# Why this? Each section gets its own styled
+# container so stakeholders can read at a glance
 # ─────────────────────────────────────────
 def display_insights(insight: str):
-    # Why this? Split the full insight into named sections
     sections = {
         "1. Summary": None,
         "2. Key Findings": None,
         "3. Root Cause": None,
     }
 
+    # Why this? Extract recommendation separately
+    # so it can be displayed in its own green box
     recommendation = None
     remaining = insight
 
-    # Extract recommendation separately
     for marker in ["4. Recommendation", "4) Recommendation", "**4.", "4."]:
         if marker in remaining:
             parts = remaining.split(marker, 1)
             remaining = parts[0]
-            recommendation = marker + parts[1].strip()
+            recommendation = parts[1].strip()
             break
 
-    # Why this? Parse each section from the insight text
+    # Parse each section
     section_keys = list(sections.keys())
     for i, key in enumerate(section_keys):
         if key in remaining:
@@ -273,8 +251,7 @@ def display_insights(insight: str):
                     break
             sections[key] = remaining[start:end].strip()
 
-    # Why this? Different colours for different sections
-    # helps stakeholders scan quickly
+    # Display sections with different colours
     if sections["1. Summary"]:
         st.subheader("📋 Summary")
         st.info(sections["1. Summary"])
@@ -288,18 +265,39 @@ def display_insights(insight: str):
         with st.container(border=True):
             st.markdown(sections["3. Root Cause"])
 
+    # Why this? Recommendation gets its own clean
+    # formatted section with Who/Why/What indented
     if recommendation:
         st.subheader("✅ Recommendation")
-        st.success(recommendation)
+
+        # Clean up messy header artifacts
+        for header in ["4. Recommendation*", "4. Recommendation**",
+                       "4. Recommendation", "4) Recommendation", "**"]:
+            recommendation = recommendation.replace(header, "").strip()
+
+        # Display each line cleanly
+        lines = recommendation.split("\n")
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if line.lower().startswith("who:"):
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;👤 **{line}**")
+            elif line.lower().startswith("why:"):
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;💡 **{line}**")
+            elif line.lower().startswith("what:"):
+                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;📌 **{line}**")
+            elif line.lower().startswith("action item"):
+                st.markdown(f"**{line}**")
+            else:
+                st.markdown(line)
 
 # ─────────────────────────────────────────
 # HELPER: DISPLAY FOLLOW-UP QUESTIONS
-# Why this? Suggested questions guide stakeholders
-# to dig deeper without needing to think of what to ask
+# Why this? Guides stakeholders to dig deeper
+# without needing to think of what to ask next
 # ─────────────────────────────────────────
 def display_followup_questions(question: str):
-    # Why this? Use the LLM to generate relevant follow-up
-    # questions based on what the user just asked
     suggestions = [
         "Which product category contributes the most revenue?",
         "What is the monthly revenue trend?",
@@ -308,7 +306,6 @@ def display_followup_questions(question: str):
         "Which product category has the highest cancellation rate?"
     ]
 
-    # Why this? Swap in more relevant suggestions based on keywords
     q_lower = question.lower()
     if "revenue" in q_lower or "sales" in q_lower:
         suggestions = [
@@ -345,16 +342,12 @@ def display_followup_questions(question: str):
 
     st.subheader("💬 Suggested Follow-Up Questions")
     for s in suggestions:
-        # Why this? Button for each suggestion so user can
-        # click directly instead of retyping
         if st.button(f"➡️ {s}", key=s):
             st.session_state.followup = s
             st.rerun()
 
 # ─────────────────────────────────────────
 # SIDEBAR — ANALYSIS HISTORY
-# Why this? Shows recent questions so users can
-# track what they've already analysed
 # ─────────────────────────────────────────
 with st.sidebar:
     st.title("📚 Analysis History")
@@ -377,8 +370,6 @@ st.divider()
 
 # ─────────────────────────────────────────
 # QUESTION INPUT
-# Why this? Check if a follow-up button was clicked
-# and pre-fill the question input with it
 # ─────────────────────────────────────────
 default_question = st.session_state.get("followup", "")
 if "followup" in st.session_state:
@@ -417,17 +408,16 @@ if st.button("🔍 Analyse", type="primary"):
                 st.error(f"Something went wrong: {e}")
                 st.stop()
 
-        # Why this? Save to history after successful analysis
         st.session_state.history.append(question)
 
         df = result["dataframe"]
 
-        # ── KPI CARDS ──
+        # KPI CARDS
         st.divider()
         display_kpis(df)
         st.divider()
 
-        # ── TWO COLUMN LAYOUT ──
+        # TWO COLUMN LAYOUT
         col1, col2 = st.columns([1, 1])
 
         with col1:
@@ -437,8 +427,6 @@ if st.button("🔍 Analyse", type="primary"):
             st.subheader("📊 Data Summary")
             st.text(result["data_summary"])
 
-            # Why this? Expandable raw data so it doesn't
-            # clutter the main view but is available if needed
             if df is not None and not df.empty:
                 with st.expander("🔎 View Raw Data"):
                     st.caption(f"Showing up to 20 rows — full shape: {df.shape[0]} rows × {df.shape[1]} columns")
@@ -447,7 +435,7 @@ if st.button("🔍 Analyse", type="primary"):
         with col2:
             display_insights(result["insight"])
 
-        # ── INTERACTIVE CHART (full width at bottom) ──
+        # INTERACTIVE CHART
         st.divider()
         st.subheader("📈 Interactive Chart")
         if df is not None and not df.empty and "error" not in df.columns:
@@ -455,7 +443,7 @@ if st.button("🔍 Analyse", type="primary"):
         else:
             st.info("No chart available for this result.")
 
-        # ── FOLLOW-UP QUESTIONS ──
+        # FOLLOW-UP QUESTIONS
         st.divider()
         display_followup_questions(question)
 

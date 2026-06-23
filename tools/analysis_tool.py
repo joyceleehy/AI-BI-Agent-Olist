@@ -26,8 +26,19 @@ def analyze_dataframe(df: pd.DataFrame) -> str:
             f"{col}: total = {total:,.2f}, average = {average:,.2f}"
         )
 
-    # Top rows preview
+    # Why this? Filter out UUID columns for cleaner preview
+    # UUID columns are long hex strings that clutter the display
+    clean_df = df.copy()
+    for col in clean_df.columns:
+        sample = str(clean_df[col].iloc[0])
+        is_uuid = len(sample) > 30 and all(
+            c in "0123456789abcdef-" for c in sample.lower()
+        )
+        if is_uuid:
+            clean_df = clean_df.drop(columns=[col])
+
+    # Top rows preview without UUID columns
     summary_parts.append("\nTop 5 rows preview:")
-    summary_parts.append(df.head(5).to_string(index=False))
+    summary_parts.append(clean_df.head(5).to_string(index=False))
 
     return "\n".join(summary_parts)
