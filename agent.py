@@ -39,7 +39,19 @@ Rules:
   unless the user explicitly asks for IDs
 - Always use human readable columns like category names, state names, dates
 - When asked about top products always group by product_category_name_english
-  not by product_id
+- Always use ORDER BY ... DESC and LIMIT for top/bottom questions
+- Do NOT filter by year unless the question specifically mentions a year
+
+IMPORTANT JOIN RULES:
+- category_translation joins to products using product_category_name:
+  products.product_category_name = category_translation.product_category_name
+- products joins to order_items using product_id:
+  products.product_id = order_items.product_id
+- order_items joins to orders using order_id:
+  order_items.order_id = orders.order_id
+- orders joins to customers using customer_id:
+  orders.customer_id = customers.customer_id
+- Revenue is always SUM(order_items.price) — never products.price
 """
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content.strip()
@@ -88,6 +100,13 @@ Key rules:
 - Always use human readable columns like category names, state names, dates
 - When asked about 'top products' always group by product_category_name_english
   not by product_id
+
+IMPORTANT JOIN KEYS:
+- products.product_category_name = category_translation.product_category_name
+- products.product_id = order_items.product_id
+- order_items.order_id = orders.order_id
+- orders.customer_id = customers.customer_id
+- Revenue is always SUM(order_items.price) — never products.price
 """
 
     # Step 1: Generate SQL from the question
