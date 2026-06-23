@@ -6,20 +6,29 @@ An AI-powered business intelligence agent that transforms natural language quest
 
 ---
 
+## 🚀 Live Demo
+
+👉 **[Try the live app here](https://ai-bi-agent-olist-eredhtii45hjasy9rvpbby.streamlit.app)**
+
+---
+
 ## 🎯 What It Does
 
 Instead of manually writing SQL queries and analysing spreadsheets, stakeholders can simply type a business question in plain English and receive:
 
-- ✅ Auto-generated SQL query
-- ✅ Data pulled live from the database
-- ✅ AI-written business insight (Summary → Key Findings → Root Cause → Recommendation)
-- ✅ Interactive visualisation
+- Auto-generated SQL query
+- Data pulled live from the database
+- AI-written business insight (Summary → Key Findings → Root Cause → Recommendation)
+- Interactive visualisation
+- Suggested follow-up questions
 
 ---
 
-## 🖥️ Demo
+## 🖥️ App Screenshots
 
-![App Screenshot](screenshots/demo.png)
+![Overview](screenshots/demo_overview.png)
+![Insights](screenshots/demo_insights.png)
+![Chart](screenshots/demo_chart.png)
 
 **Example questions you can ask:**
 - *"What are the top 5 product categories by revenue?"*
@@ -39,12 +48,12 @@ Streamlit UI (app.py)
         ↓
 AI Agent (agent.py)
         ↓
-┌─────────────────────────────┐
-│  LLM #1: Generate SQL       │  ← Groq (Llama 3.1)
-│  SQLite: Run Query          │  ← Olist Database
-│  Pandas: Analyse Results    │  ← Data Summary
-│  LLM #2: Generate Insight   │  ← Groq (Llama 3.1)
-└─────────────────────────────┘
+┌─────────────────────────────────┐
+│  LLM #1: Generate SQL           │  ← Groq (Llama 3.1)
+│  SQLite: Run Query              │  ← Olist Database
+│  Pandas: Analyse Results        │  ← Data Summary
+│  LLM #2: Generate Insight       │  ← Groq (Llama 3.1)
+└─────────────────────────────────┘
         ↓
 Structured Output:
 Summary · Key Findings · Root Cause · Recommendation
@@ -85,7 +94,12 @@ ai-bi-agent-olist/
 │   └── db.py               # Database connection
 │
 ├── database/
-│   └── olist.db            # SQLite database (not tracked in Git)
+│   └── olist.db            # SQLite database (tracked via Git LFS)
+│
+├── screenshots/
+│   ├── demo_overview.png
+│   ├── demo_insights.png
+│   └── demo_chart.png
 │
 ├── requirements.txt
 └── README.md
@@ -113,10 +127,7 @@ GROQ_API_KEY=your_groq_api_key_here
 ```
 Get a free API key at [console.groq.com](https://console.groq.com)
 
-### 4. Add the database
-Download the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) and place `olist.db` in the `database/` folder.
-
-### 5. Run the app
+### 4. Run the app
 ```bash
 streamlit run app.py
 ```
@@ -125,11 +136,16 @@ streamlit run app.py
 
 ## 💡 Key Features
 
-- **Natural Language to SQL** — LLM automatically writes SQL from plain English
-- **Real Data** — queries live against Olist e-commerce database (100k+ orders)
-- **Structured Insights** — every answer follows Summary → Key Findings → Root Cause → Recommendation
-- **Smart Visualisation** — auto-selects bar, line, or pie chart based on data shape
-- **Analysis History** — sidebar tracks previous questions in the session
+| Feature | Description |
+|---|---|
+| Natural Language to SQL | LLM automatically writes SQL from plain English |
+| Real Data | Queries live against Olist database (100k+ orders) |
+| KPI Cards | Instant at-a-glance metrics (rows, total, average) |
+| Structured Insights | Summary → Key Findings → Root Cause → Recommendation |
+| Smart Visualisation | Auto-selects bar, line, or pie chart based on data |
+| Follow-Up Questions | Suggests relevant next questions dynamically |
+| Analysis History | Sidebar tracks previous questions in the session |
+| Raw Data Preview | Expandable table showing up to 20 rows |
 
 ---
 
@@ -148,14 +164,34 @@ streamlit run app.py
 
 ---
 
+## 🧠 How It Works
+
+1. **User types a question** in plain English
+2. **LLM #1 (Groq)** reads the database schema and writes a SQL query
+3. **SQLite** runs the query and returns raw data
+4. **Pandas** summarises the data into plain text
+5. **LLM #2 (Groq)** reads the summary and writes a structured business insight
+6. **Streamlit** displays everything — SQL, data, chart, and insight
+
+The key insight: **no SQL knowledge required from the user.** The agent handles everything automatically.
+
+---
+
 ## 🙋 About
 
 Built by **Joyce Lee** — Data & BI Analyst with 10 years of experience in HR Analytics and Business Intelligence.
 
 This project demonstrates:
-- AI agent architecture
-- Natural language to SQL pipeline
+- AI agent architecture and pipeline design
+- Natural language to SQL generation
 - LLM prompt engineering
 - End-to-end data pipeline thinking
+- Streamlit application development
 
 📎 [LinkedIn](https://www.linkedin.com/in/joyceleehy) · 📂 [GitHub](https://github.com/joyceleehy)
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
