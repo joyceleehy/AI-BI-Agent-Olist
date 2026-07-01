@@ -179,7 +179,7 @@ The key insight: **no SQL knowledge required from the user.** The agent handles 
 
 ## 🙋 About
 
-Built by **Joyce Lee** — Data & BI Analyst with 10 years of experience in HR Analytics and Business Intelligence.
+Built by **Joyce Lee** — Data & BI Analyst in HR Analytics and Business Intelligence.
 
 This project demonstrates:
 - AI agent architecture and pipeline design
